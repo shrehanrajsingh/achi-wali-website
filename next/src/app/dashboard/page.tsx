@@ -18,6 +18,7 @@ import {
   prettySafeImage,
 } from "../utils/pretty";
 import { Listbox, Menu, Transition } from "@headlessui/react"; // Added Menu, Transition
+import Link from "next/link";
 
 const heading_font = Righteous({
   subsets: ["latin"],
@@ -36,8 +37,7 @@ type ActiveSection =
   | "projects"
   | "profile"
   | "assets"
-  | "settings"
-  | "home";
+  | "settings";
 
 const ALL_PERSONAL_LINK_TYPES = ["mail", "linkedin", "github"];
 
@@ -125,15 +125,6 @@ export default function Dashboard() {
   });
 
   const menuItems = [
-    {
-      id: "home" as ActiveSection,
-      label: "Home",
-      icon: (
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-        </svg>
-      ),
-    },
     {
       id: "profile" as ActiveSection,
       label: "Profile",
@@ -279,16 +270,6 @@ export default function Dashboard() {
       setUserLinks(user.links);
     }
   }, [user]);
-
-  useEffect(() => {
-    if (activeSection === "home") {
-      router.push("/");
-    }
-  }, [activeSection, router]);
-
-  if (activeSection === "home") {
-    return null;
-  }
 
   const handleNewPostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1178,70 +1159,68 @@ export default function Dashboard() {
                     const usedLinks = userLinks.map((l) => l.text);
 
                     return (
-                      <>
-                        <div
-                          key={index}
-                          className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2"
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2"
+                      >
+                        <select
+                          name="text"
+                          value={link.text}
+                          onChange={(e) => handleUserLinkChange(index, e)}
+                          disabled={!isEditingLinks}
+                          className={
+                            "w-full sm:flex-grow px-3 py-2 rounded-lg focus:outline-none focus:border-pink-400 appearance-none " +
+                            (isEditingLinks
+                              ? "bg-white/5 border border-white/10 text-white placeholder-gray-500"
+                              : "bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed")
+                          }
                         >
-                          <select
-                            name="text"
-                            value={link.text}
-                            onChange={(e) => handleUserLinkChange(index, e)}
-                            disabled={!isEditingLinks}
-                            className={
-                              "w-full sm:flex-grow px-3 py-2 rounded-lg focus:outline-none focus:border-pink-400 appearance-none " +
-                              (isEditingLinks
-                                ? "bg-white/5 border border-white/10 text-white placeholder-gray-500"
-                                : "bg-white/5 border border-white/10 text-gray-500 cursor-not-allowed")
-                            }
-                          >
-                            {ALL_PERSONAL_LINK_TYPES.map((type) =>
-                              usedLinks.includes(type) &&
+                          {ALL_PERSONAL_LINK_TYPES.map((type) =>
+                            usedLinks.includes(type) &&
                               link.text !== type ? null : (
-                                <option
-                                  key={type}
-                                  value={type}
-                                  className="bg-gray-900 text-white"
-                                >
-                                  {type}
-                                </option>
-                              )
-                            )}
-                          </select>
-
-                          <input
-                            type="url"
-                            name="url"
-                            value={link.url}
-                            onChange={(e) => handleUserLinkChange(index, e)}
-                            placeholder="URL"
-                            disabled={!isEditingLinks}
-                            className={
-                              isEditingLinks
-                                ? "w-full sm:flex-grow px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-pink-400"
-                                : "w-full sm:flex-grow px-3 py-2 bg-white/5 border border-white/10 rounded-lg placeholder-gray-500 focus:outline-none focus:border-pink-400 text-gray-500 cursor-not-allowed"
-                            }
-                          />
-                          {isEditingLinks && (
-                            <button
-                              onClick={() => removeUserLinkField(index)}
-                              className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
+                              <option
+                                key={type}
+                                value={type}
+                                className="bg-gray-900 text-white"
                               >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </button>
+                                {type}
+                              </option>
+                            )
                           )}
-                        </div>
-                      </>
+                        </select>
+
+                        <input
+                          type="url"
+                          name="url"
+                          value={link.url}
+                          onChange={(e) => handleUserLinkChange(index, e)}
+                          placeholder="URL"
+                          disabled={!isEditingLinks}
+                          className={
+                            isEditingLinks
+                              ? "w-full sm:flex-grow px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-pink-400"
+                              : "w-full sm:flex-grow px-3 py-2 bg-white/5 border border-white/10 rounded-lg placeholder-gray-500 focus:outline-none focus:border-pink-400 text-gray-500 cursor-not-allowed"
+                          }
+                        />
+                        {isEditingLinks && (
+                          <button
+                            onClick={() => removeUserLinkField(index)}
+                            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -1371,15 +1350,24 @@ export default function Dashboard() {
           {/* Navigation Menu */}
           <nav className="flex-1 p-4">
             <div className="space-y-2">
+              <Link
+                href={"/"}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${"text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+                <span className={paragraph_font.className}>Home</span>
+              </Link>
               {menuItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveSection(item.id)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    activeSection === item.id
-                      ? "bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-400 border border-pink-500/30"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeSection === item.id
+                    ? "bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-400 border border-pink-500/30"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    }`}
                 >
                   {item.icon}
                   <span className={paragraph_font.className}>{item.label}</span>
@@ -1481,13 +1469,11 @@ export default function Dashboard() {
                         {({ active }) => (
                           <button
                             onClick={() => setActiveSection("profile")}
-                            className={`${
-                              active
-                                ? "bg-white/10 text-white"
-                                : "text-gray-300"
-                            } group flex items-center w-full px-4 py-2 text-sm ${
-                              paragraph_font.className
-                            } transition-colors`}
+                            className={`${active
+                              ? "bg-white/10 text-white"
+                              : "text-gray-300"
+                              } group flex items-center w-full px-4 py-2 text-sm ${paragraph_font.className
+                              } transition-colors`}
                           >
                             Your Profile
                           </button>
@@ -1497,13 +1483,11 @@ export default function Dashboard() {
                         {({ active }) => (
                           <button
                             onClick={() => setActiveSection("settings")}
-                            className={`${
-                              active
-                                ? "bg-white/10 text-white"
-                                : "text-gray-300"
-                            } group flex items-center w-full px-4 py-2 text-sm ${
-                              paragraph_font.className
-                            } transition-colors`}
+                            className={`${active
+                              ? "bg-white/10 text-white"
+                              : "text-gray-300"
+                              } group flex items-center w-full px-4 py-2 text-sm ${paragraph_font.className
+                              } transition-colors`}
                           >
                             Settings
                           </button>
@@ -1516,13 +1500,11 @@ export default function Dashboard() {
                         {({ active }) => (
                           <button
                             onClick={handleSignOut}
-                            className={`${
-                              active
-                                ? "bg-red-500/20 text-red-400"
-                                : "text-gray-300"
-                            } group flex items-center w-full px-4 py-2 text-sm ${
-                              paragraph_font.className
-                            } hover:bg-red-500/10 hover:text-red-400 transition-colors`}
+                            className={`${active
+                              ? "bg-red-500/20 text-red-400"
+                              : "text-gray-300"
+                              } group flex items-center w-full px-4 py-2 text-sm ${paragraph_font.className
+                              } hover:bg-red-500/10 hover:text-red-400 transition-colors`}
                           >
                             Sign out
                           </button>
@@ -1852,8 +1834,7 @@ export default function Dashboard() {
                             key={item}
                             value={item}
                             className={({ active }) =>
-                              `px-4 py-2 cursor-pointer transition text-white ${
-                                active ? "bg-pink-600/40" : "bg-[#1a1a1a]"
+                              `px-4 py-2 cursor-pointer transition text-white ${active ? "bg-pink-600/40" : "bg-[#1a1a1a]"
                               }`
                             }
                           >

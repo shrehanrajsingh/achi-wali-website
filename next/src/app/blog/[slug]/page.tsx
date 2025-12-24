@@ -248,7 +248,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </header>
 
         <article
-          className="prose prose-xl prose-invert max-w-none"
+          className="prose prose-xl prose-invert max-w-none mdx-content"
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
 
