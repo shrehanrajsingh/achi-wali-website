@@ -11,6 +11,7 @@ import {
   Shield,
   Star,
 } from "lucide-react";
+import Navbar from "../components/navbar";
 import Footer from "../footer";
 import { useEffect, useState } from "react";
 import api from "../axiosApi";
@@ -73,6 +74,7 @@ const ProfileDirectory = () => {
       animate={{ opacity: 1, backgroundColor: "rgba(0,0,0,1)" }}
       transition={{ duration: 0.8 }}
     >
+      <Navbar />
       <div className="fixed top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,hsl(320_60%_20%_/_0.2),transparent_70%)] pointer-events-none" />
 
       {/* Hero Section */}

@@ -18,10 +18,12 @@ import {
     Star,
     User,
 } from "lucide-react";
+import Navbar from "../../components/navbar";
 import Footer from "../../footer";
 import api from "../../axiosApi";
 import { APIControl } from "@/lib/types/api.types";
 import { EUserRole, IBlogOfList, IProject, EProjectPortfolio } from "../../types/domain.types"; // Correct types imports?
+import { prettySafeImage } from "../../utils/pretty";
 // We need custom types matching the internal API response if domain.types doesn't cover PublicSingle
 // But I'll use "any" or define interface locally for now to move fast, or try to import from service types if possible (but those are backend types usually).
 // Actually domain.types has IUser which is close.
@@ -154,9 +156,52 @@ const UserProfile = () => {
             transition={{ duration: 0.8 }}
         >
             {/* Dynamic Hero Section */}
-            <header className="relative overflow-hidden border-0 bg-card/60 backdrop-blur-sm pt-24 pb-16">
+            <Navbar />
+            <header className="relative overflow-hidden border-0 bg-card/60 backdrop-blur-sm pt-32 pb-16">
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-600/20 via-purple-600/15 to-fuchsia-600/20" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(320_70%_60%_/_0.15),transparent_50%),radial-gradient(circle_at_70%_80%,hsl(270_60%_60%_/_0.15),transparent_50%)]" />
+
+                {/* Animated blurred blobs */}
+                <motion.div
+                    animate={{
+                        x: [0, 100, 0],
+                        y: [0, -50, 0],
+                        opacity: [0.3, 0.5, 0.3]
+                    }}
+                    transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                    className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500/30 rounded-full blur-[100px] pointer-events-none mix-blend-screen"
+                />
+                <motion.div
+                    animate={{
+                        x: [0, -70, 0],
+                        y: [0, 100, 0],
+                        opacity: [0.2, 0.4, 0.2]
+                    }}
+                    transition={{
+                        duration: 25,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 2
+                    }}
+                    className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none mix-blend-screen"
+                />
+                <motion.div
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{
+                        duration: 15,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 1
+                    }}
+                    className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-fuchsia-500/10 rounded-full blur-[90px] pointer-events-none mix-blend-screen"
+                />
 
                 <div className="container relative mx-auto px-4 sm:px-6">
                     <div className="mx-auto max-w-7xl">
@@ -305,13 +350,26 @@ const UserProfile = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: index * 0.1 }}
-                                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card/30 p-6 hover:border-purple-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-purple-900/20"
+                                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card/30 hover:border-purple-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-purple-900/20 flex flex-col"
                                 >
-                                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-300 transition-colors">{blog.title}</h3>
-                                    {/* Blog content snippet or summary if available in list view? Often list view lacks content. */}
-                                    <a href={`/blog/${blog.slug}`} className="text-sm font-medium text-purple-400 hover:text-purple-300 flex items-center gap-1 mt-4">
-                                        Read Article <ExternalLink className="w-3 h-3" />
-                                    </a>
+                                    {blog.coverImgMediaKey && (
+                                        <div className="relative h-48 w-full overflow-hidden shrink-0">
+                                            <img
+                                                src={prettySafeImage(blog.coverImgMediaKey)}
+                                                alt={blog.title}
+                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
+                                        </div>
+                                    )}
+                                    <div className="p-6 flex flex-col flex-grow">
+                                        <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-300 transition-colors">{blog.title}</h3>
+                                        <div className="mt-auto">
+                                            <a href={`/blog/${blog.slug}`} className="text-sm font-medium text-purple-400 hover:text-purple-300 flex items-center gap-1">
+                                                Read Article <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                        </div>
+                                    </div>
                                 </motion.article>
                             ))}
                         </div>

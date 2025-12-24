@@ -680,6 +680,9 @@ export default function Dashboard() {
     }
   };
 
+  /* New state for quick upload loading */
+  const [isUploading, setIsUploading] = useState(false);
+
   const copyAssetKey = async (assetKey: string) => {
     try {
       await navigator.clipboard.writeText(assetKey);
@@ -691,13 +694,79 @@ export default function Dashboard() {
     }
   };
 
+  const handleQuickUpload = async (e: React.ChangeEvent<HTMLInputElement>, setKeyCallback: (key: string) => void) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    if (!file) return;
+
+    setIsUploading(true);
+    const toastId = toast.loading("Uploading image...");
+
+    try {
+      // 1. Sign
+      const uniqueName = `quick-upload-${Date.now()}`;
+      const signRes = await api("POST", "/media/sign", {
+        body: { publicId: uniqueName }
+      });
+
+      if (signRes.action !== true) {
+        throw new Error(signRes.message || "Failed to sign upload request");
+      }
+
+      const signedToken = signRes.data as IMediaSignedToken;
+
+      // 2. Upload to Cloudinary
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", signedToken.apiKey);
+      formData.append("folder", signedToken.folder);
+      formData.append("public_id", uniqueName);
+      formData.append("timestamp", signedToken.timestamp);
+      formData.append("signature", signedToken.signature);
+
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${signedToken.cloudName}/image/upload`;
+      const cloudinaryRes = await fetch(cloudinaryUrl, {
+        method: "POST",
+        body: formData,
+      });
+      const cloudinaryData = await cloudinaryRes.json();
+
+      if (cloudinaryData.error) {
+        throw new Error(cloudinaryData.error.message || "Cloudinary upload failed");
+      }
+
+      // 3. Create Media Record
+      const createMediaRes = await api("POST", "/media", {
+        body: {
+          publicId: cloudinaryData.public_id,
+          url: cloudinaryData.secure_url,
+        }
+      });
+
+      if (createMediaRes.action !== true) {
+        throw new Error(createMediaRes.message || "Failed to save asset record");
+      }
+
+      // Success
+      setKeyCallback(cloudinaryData.public_id);
+      toast.success("Image uploaded successfully!", { id: toastId });
+      fetchAssets(); // Refresh assets list
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Upload failed", { id: toastId });
+    } finally {
+      setIsUploading(false);
+      // Clear input value so same file can be selected again if needed
+      e.target.value = "";
+    }
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case "profile":
         return (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full flex items-center justify-center">
                 {/* <svg
                   className="w-10 h-10 text-pink-400"
                   fill="currentColor"
@@ -726,8 +795,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="glass rounded-xl p-6 relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="glass rounded-xl p-5 relative">
                 <div className="flex items-center justify-between mb-4">
                   <h3
                     className={`text-lg text-white ${heading_font.className}`}
@@ -767,7 +836,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="glass rounded-xl p-6">
+              <div className="glass rounded-xl p-5">
                 <h3
                   className={`text-lg text-white mb-4 ${heading_font.className}`}
                 >
@@ -1322,7 +1391,7 @@ export default function Dashboard() {
         `}
         >
           {/* Header */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-4 border-b border-white/10">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
                 <span
@@ -1352,7 +1421,7 @@ export default function Dashboard() {
             <div className="space-y-2">
               <Link
                 href={"/"}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${"text-gray-400 hover:text-white hover:bg-white/5"
+                className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${"text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -1364,7 +1433,7 @@ export default function Dashboard() {
                 <button
                   key={item.id}
                   onClick={() => setActiveSection(item.id)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeSection === item.id
+                  className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${activeSection === item.id
                     ? "bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-400 border border-pink-500/30"
                     : "text-gray-400 hover:text-white hover:bg-white/5"
                     }`}
@@ -1380,7 +1449,7 @@ export default function Dashboard() {
           <div className="p-4 border-t border-white/10">
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center cursor-pointer space-x-3 px-4 py-3 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+              className="w-full flex items-center cursor-pointer space-x-3 px-4 py-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5z" />
@@ -1393,7 +1462,7 @@ export default function Dashboard() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col lg:ml-0">
           {/* Top Bar -- THIS IS THE MODIFIED SECTION */}
-          <div className="glass border-b border-white/10 p-4 lg:p-6">
+          <div className="glass border-b border-white/10 p-3 lg:p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 {/* Hamburger Menu Button - Mobile Only */}
@@ -1418,7 +1487,7 @@ export default function Dashboard() {
 
                 <div>
                   <h1
-                    className={`text-2xl lg:text-3xl text-white ${heading_font.className} capitalize`}
+                    className={`text-xl lg:text-2xl text-white ${heading_font.className} capitalize`}
                   >
                     {activeSection}
                   </h1>
@@ -1603,6 +1672,16 @@ export default function Dashboard() {
                   placeholder="Enter cover image media key..."
                   required
                 />
+                <div className="mt-2">
+                  <span className={`text-xs text-gray-500 mb-1 block ${paragraph_font.className}`}>Or upload directly:</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploading}
+                    onChange={(e) => handleQuickUpload(e, (key) => setNewPostData(prev => ({ ...prev, coverImgMediaKey: key })))}
+                    className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-500/10 file:text-pink-400 hover:file:bg-pink-500/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
               </div>
 
               {/* Tags Field */}
@@ -1725,6 +1804,16 @@ export default function Dashboard() {
                     placeholder="Paste the asset key here..."
                     required
                   />
+                  <div className="mt-2">
+                    <span className={`text-xs text-gray-500 mb-1 block ${paragraph_font.className}`}>Or upload directly:</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploading}
+                      onChange={(e) => handleQuickUpload(e, (key) => setBlogUpdate(prev => ({ ...prev, coverImgMediaKey: key })))}
+                      className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-500/10 file:text-pink-400 hover:file:bg-pink-500/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1880,6 +1969,16 @@ export default function Dashboard() {
                   placeholder="Enter cover image media key..."
                   required
                 />
+                <div className="mt-2">
+                  <span className={`text-xs text-gray-500 mb-1 block ${paragraph_font.className}`}>Or upload directly:</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploading}
+                    onChange={(e) => handleQuickUpload(e, (key) => setNewProjectData(prev => ({ ...prev, coverImgMediaKey: key })))}
+                    className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-500/10 file:text-pink-400 hover:file:bg-pink-500/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
               </div>
 
               {/* Description Field (Unchanged) */}
@@ -2055,6 +2154,16 @@ export default function Dashboard() {
                     placeholder="Paste the asset key here..."
                     required
                   />
+                  <div className="mt-2">
+                    <span className={`text-xs text-gray-500 mb-1 block ${paragraph_font.className}`}>Or upload directly:</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploading}
+                      onChange={(e) => handleQuickUpload(e, (key) => setProjectUpdate(prev => ({ ...prev, coverImgMediaKey: key })))}
+                      className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-500/10 file:text-pink-400 hover:file:bg-pink-500/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -182,7 +182,7 @@ export default async function Blog() {
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center">
                               <span className="text-white font-semibold">
-                                {prettyShortName(blog.author.name)}
+                                {blog.author.name.charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <div>
