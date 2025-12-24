@@ -3,21 +3,15 @@
 import { motion } from "framer-motion";
 import {
   Search,
-  Users,
-  Briefcase,
-  ExternalLink,
   ChevronLeft,
   ChevronRight,
-  Shield,
-  Star,
 } from "lucide-react";
 import Navbar from "../components/navbar";
 import Footer from "../footer";
 import { useEffect, useState } from "react";
 import api from "../axiosApi";
-import { IPaginatedUsers, EUserRole, EUserDesignation } from "../types/domain.types";
+import { IPaginatedUsers } from "../types/domain.types";
 import { APIControl } from "@/lib/types/api.types";
-import Link from "next/link";
 import UserCard from "./components/UserCard";
 
 const ProfileDirectory = () => {

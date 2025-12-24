@@ -280,12 +280,11 @@ const getPublicAll: ServiceSignature<
     SDOut.User.GetAll,
     false
 > = async (data) => {
-    // @ts-ignore
     const paginatedUsers = await userRepository.findAllPaginated({}, {
-        // @ts-ignore
-        page: data.page,
-        // @ts-ignore
-        limit: data.limit,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        page: (data as any).page,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        limit: (data as any).limit,
     });
 
     return {
@@ -315,7 +314,7 @@ const getPublicOne: ServiceSignature<
     SDOut.User.GetSinglePublic,
     false
 > = async (data) => {
-    // @ts-ignore
+    // @ts-expect-error -- Library types mismatch
     const user = await userRepository.findById(data._id);
     if (!user) {
         return {

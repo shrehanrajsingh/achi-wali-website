@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -15,18 +16,25 @@ import {
     Globe,
     Instagram,
     Shield,
-    Star,
-    User,
 } from "lucide-react";
 import Navbar from "../../components/navbar";
 import Footer from "../../footer";
 import api from "../../axiosApi";
 import { APIControl } from "@/lib/types/api.types";
-import { EUserRole, IBlogOfList, IProject, EProjectPortfolio } from "../../types/domain.types"; // Correct types imports?
+import { EUserRole } from "../../types/domain.types";
 import { prettySafeImage } from "../../utils/pretty";
-// We need custom types matching the internal API response if domain.types doesn't cover PublicSingle
-// But I'll use "any" or define interface locally for now to move fast, or try to import from service types if possible (but those are backend types usually).
-// Actually domain.types has IUser which is close.
+import Link from "next/link";
+
+// Map link text to icons
+const getIconForLink = (text: string) => {
+    const lower = text.toLowerCase();
+    if (lower.includes("github")) return Github;
+    if (lower.includes("linkedin")) return Linkedin;
+    if (lower.includes("instagram")) return Instagram;
+    if (lower.includes("web") || lower.includes("portfolio")) return Globe;
+    return ExternalLink;
+};
+// ... (skip type definition if unchanged)
 
 type PublicUser = {
     _id: string;
@@ -47,22 +55,14 @@ type PublicUser = {
     memberSince: string;
 };
 
-// Map link text to icons
-const getIconForLink = (text: string) => {
-    const lower = text.toLowerCase();
-    if (lower.includes("github")) return Github;
-    if (lower.includes("linkedin")) return Linkedin;
-    if (lower.includes("instagram")) return Instagram;
-    if (lower.includes("web") || lower.includes("portfolio")) return Globe;
-    return ExternalLink;
-};
-
 const UserProfile = () => {
     const params = useParams();
     const id = params.id as string;
 
     const [user, setUser] = useState<PublicUser | null>(null);
-    const [projects, setProjects] = useState<any[]>([]); // Using any for simplicity as IProject might differ slightly
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [projects, setProjects] = useState<any[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [blogs, setBlogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -81,14 +81,14 @@ const UserProfile = () => {
                 });
 
                 if (userRes.action !== true) {
-                    setError(userRes.action === false ? userRes.message : "Failed to load profile (Server Error)");
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    setError(userRes.action === false ? (userRes as any).message : "Failed to load profile (Server Error)");
                     setLoading(false);
                     return;
                 }
                 setUser(userRes.data as PublicUser);
 
                 // Fetch Projects (ALL and filter)
-                // Need to verify endpoint parameters for "ALL"
                 const projectRes = await api("GET", "/project", {
                     query: {
                         target: APIControl.Project.Get.Target.ALL,
@@ -97,8 +97,10 @@ const UserProfile = () => {
                 });
 
                 if (projectRes.action === true) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const allProjects = projectRes.data as any[];
                     // Filter by author._id
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const userProjects = allProjects.filter((p) => p.author._id === id || p.collaborators.some((c: any) => c._id === id));
                     setProjects(userProjects);
                 }
@@ -111,8 +113,10 @@ const UserProfile = () => {
                 });
 
                 if (blogRes.action === true) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const allBlogs = blogRes.data as any[];
                     // Filter by author._id
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const userBlogs = allBlogs.filter((b) => b.author._id === id || b.collaborators.some((c: any) => c._id === id));
                     setBlogs(userBlogs);
                 }
@@ -143,7 +147,7 @@ const UserProfile = () => {
             <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white p-4">
                 <h2 className="text-2xl font-bold mb-4 text-red-500">Error</h2>
                 <p className="text-gray-400">{error || "User not found"}</p>
-                <a href="/profile" className="mt-6 text-pink-400 hover:text-pink-300 underline">Go to profiles</a>
+                <Link href="/profile" className="mt-6 text-pink-400 hover:text-pink-300 underline">Go to profiles</Link>
             </div>
         );
     }
@@ -212,10 +216,11 @@ const UserProfile = () => {
                                     <div className="relative h-40 w-40 sm:h-48 sm:w-48 rounded-full bg-gradient-to-br from-pink-500 via-purple-600 to-fuchsia-700 p-1.5 shadow-2xl">
                                         <div className="flex h-full w-full items-center justify-center rounded-full bg-black overflow-hidden relative">
                                             {user.profileImgMediaKey && !imgError ? (
-                                                <img
+                                                <Image
                                                     src={user.profileImgMediaKey}
                                                     alt={user.name}
-                                                    className="w-full h-full object-cover"
+                                                    fill
+                                                    className="object-cover"
                                                     onError={() => setImgError(true)}
                                                 />
                                             ) : (
@@ -354,10 +359,11 @@ const UserProfile = () => {
                                 >
                                     {blog.coverImgMediaKey && (
                                         <div className="relative h-48 w-full overflow-hidden shrink-0">
-                                            <img
+                                            <Image
                                                 src={prettySafeImage(blog.coverImgMediaKey)}
                                                 alt={blog.title}
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                fill
+                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
                                         </div>

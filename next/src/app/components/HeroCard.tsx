@@ -1,8 +1,7 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { FaGamepad } from "react-icons/fa";
-import { FaShuttleSpace, FaSpaceAwesome } from "react-icons/fa6";
+// Icons removed
 import Image from "next/image";
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card";
 

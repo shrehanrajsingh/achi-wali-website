@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, Fragment } from "react"; // Added Fragment
+import { useEffect, useState, Fragment } from "react";
+import Image from "next/image";
 import { Righteous, Roboto } from "next/font/google";
 import api from "../axiosApi";
 import toast from "react-hot-toast";
@@ -325,7 +326,7 @@ export default function Dashboard() {
       return;
     }
 
-    const apiResponse = await api("PATCH", `/blog/${showBlogUpdateModal.id}`, {
+    const apiResponse = await api("PATCH", `/ blog / ${showBlogUpdateModal.id} `, {
       body: {
         coverImgMediaKey: blogUpdate.coverImgMediaKey,
       },
@@ -347,7 +348,7 @@ export default function Dashboard() {
   };
 
   const handlePostDelete = async (id: string) => {
-    const apiResponse = await api("DELETE", `/blog/${id}`);
+    const apiResponse = await api("DELETE", `/ blog / ${id} `);
 
     if (apiResponse.action === null) {
       toast.error("Server Error");
@@ -445,7 +446,7 @@ export default function Dashboard() {
 
     const apiResponse = await api(
       "PATCH",
-      `/project/${showProjectUpdateModal.id}`,
+      `/ project / ${showProjectUpdateModal.id} `,
       {
         body: {
           coverImgMediaKey: projectUpdate.coverImgMediaKey,
@@ -480,7 +481,7 @@ export default function Dashboard() {
   };
 
   const handleProjectDelete = async (id: string) => {
-    const apiResponse = await api("DELETE", `/project/${id}`);
+    const apiResponse = await api("DELETE", `/ project / ${id} `);
 
     if (apiResponse.action === null) {
       toast.error("Server Error");
@@ -709,7 +710,8 @@ export default function Dashboard() {
       });
 
       if (signRes.action !== true) {
-        throw new Error(signRes.message || "Failed to sign upload request");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        throw new Error((signRes as any).message || "Failed to sign upload request");
       }
 
       const signedToken = signRes.data as IMediaSignedToken;
@@ -743,16 +745,17 @@ export default function Dashboard() {
       });
 
       if (createMediaRes.action !== true) {
-        throw new Error(createMediaRes.message || "Failed to save asset record");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        throw new Error((createMediaRes as any).message || "Failed to save asset record");
       }
 
       // Success
       setKeyCallback(cloudinaryData.public_id);
       toast.success("Image uploaded successfully!", { id: toastId });
       fetchAssets(); // Refresh assets list
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      toast.error(error.message || "Upload failed", { id: toastId });
+      toast.error((error as Error).message || "Upload failed", { id: toastId });
     } finally {
       setIsUploading(false);
       // Clear input value so same file can be selected again if needed
@@ -774,10 +777,12 @@ export default function Dashboard() {
                 >
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                 </svg> */}
-                <img
+                <Image
                   src={prettySafeImage(user?.profileImgMediaKey ?? null)}
                   alt=""
-                  className="relative z-10 w-full h-full rounded-full border-4 border-pink-500/20 group-hover:border-pink-500/70 transition-all duration-700 object-cover group-hover:scale-110"
+                  width={64}
+                  height={64}
+                  className="relative z-10 rounded-full border-4 border-pink-500/20 group-hover:border-pink-500/70 transition-all duration-700 object-cover group-hover:scale-110"
                 />
               </div>
               <div>
@@ -1110,13 +1115,15 @@ export default function Dashboard() {
                     onClick={() => copyAssetKey(asset.key)}
                     className="flex flex-col items-center w-full cursor-pointer"
                   >
-                    <div className="w-40 h-40 rounded-lg mb-3 flex items-center justify-center overflow-hidden bg-white/5">
-                      <img
+                    <div className="w-40 h-40 rounded-lg mb-3 flex items-center justify-center overflow-hidden bg-white/5 relative">
+                      <Image
                         src={asset.url}
                         alt={asset.key.substring(
                           asset.key.lastIndexOf("/") + 1
                         )}
-                        className="max-w-full max-h-full object-contain"
+                        fill
+                        className="object-contain"
+                        unoptimized
                       />
                     </div>
                     <p
@@ -1507,10 +1514,12 @@ export default function Dashboard() {
                     <Menu.Button className="w-9 h-9 bg-gray-800 rounded-full flex items-center justify-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-950 focus:ring-pink-500">
                       <span className="sr-only">Open user menu</span>
                       {user?.profileImgMediaKey ? (
-                        <img
-                          className="h-9 w-9 rounded-full object-cover"
+                        <Image
+                          className="rounded-full object-cover"
                           src={prettySafeImage(user.profileImgMediaKey)}
                           alt="Profile"
+                          width={36}
+                          height={36}
                         />
                       ) : (
                         <span

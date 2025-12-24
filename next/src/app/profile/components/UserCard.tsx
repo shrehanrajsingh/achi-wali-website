@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { Shield, Users, Star, ChevronRight, User } from "lucide-react";
-import { EUserRole, EUserDesignation } from "@/app/types/domain.types"; // Adjust import path if needed
+import { Shield, Star, ChevronRight, Users } from "lucide-react";
+import { EUserRole } from "@/app/types/domain.types"; // Adjust import path if needed
 
 interface UserCardProps {
     user: {
@@ -37,11 +38,13 @@ const UserCard = ({ user, index }: UserCardProps) => {
                             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 p-[2px]">
                                 <div className="w-full h-full rounded-full bg-black overflow-hidden relative">
                                     {user.profileImgMediaKey && !imgError ? (
-                                        <img
+                                        <Image
                                             src={user.profileImgMediaKey}
                                             alt={user.name}
-                                            className="w-full h-full object-cover"
+                                            fill
+                                            className="object-cover"
                                             onError={() => setImgError(true)}
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-3xl font-bold text-white/50 select-none uppercase">

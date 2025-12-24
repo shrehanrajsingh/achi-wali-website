@@ -9,8 +9,8 @@ import { IBlogOfList } from "@/app/types/index.types";
 import {
   prettyDate,
   prettySafeImage,
-  prettyShortName,
-} from "@/app/utils/pretty";
+} from "../../utils/pretty";
+import Image from "next/image";
 
 const righteousFont = Righteous({ weight: "400", subsets: ["latin"] });
 
@@ -87,11 +87,13 @@ export default function BlogList({ posts }: BlogListProps) {
               >
                 <Link href={`/blog/${blog.slug}`}>
                   <div className="bg-gray-900/50 backdrop-blur-xl rounded-2xl border border-gray-800 overflow-hidden hover:border-pink-500/50 transition-all duration-500 h-full">
-                    <div className="relative h-48 overflow-hidden">
-                      <img
+                    <div className="relative w-full h-48 overflow-hidden bg-white/5">
+                      <Image
                         src={prettySafeImage(blog.coverImgMediaKey)}
                         alt={blog.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                        unoptimized
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       <div className="absolute top-4 left-4">

@@ -7,11 +7,8 @@ import {
   ChevronRight,
   ExternalLink,
   Github,
-  FileText,
-  Gamepad,
-  Image,
-  FlaskConical,
 } from "lucide-react";
+import Image from "next/image";
 import { IRecentFeaturedContent } from "./types/domain.types";
 import { prettySafeImage } from "./utils/pretty";
 import Link from "next/link";
@@ -45,19 +42,7 @@ const AnimatedBackground = React.memo(() => {
 
 AnimatedBackground.displayName = "AnimatedBackground";
 
-const getIconByType = (type: "BLOG" | "GAME" | "GRAPHICS" | "RND") => {
-  if (type === "BLOG") {
-    return <FileText className="w-6 h-6" />;
-  } else if (type === "GAME") {
-    return <Gamepad className="w-6 h-6" />;
-  } else if (type === "GRAPHICS") {
-    return <Image className="w-6 h-6" />;
-  } else if (type === "RND") {
-    return <FlaskConical className="w-6 h-6" />;
-  } else {
-    return null;
-  }
-};
+// getIconByType removed (unused)
 
 const ContentCard = React.memo<{
   content: IRecentFeaturedContent;
@@ -76,7 +61,7 @@ const ContentCard = React.memo<{
     return { x, y, z, rotateY: -angle };
   }, [index, activeIndex, totalProjects]);
 
-  const isActive = index === activeIndex;
+  // const isActive = index === activeIndex; // Unused
   const distance = Math.abs(index - activeIndex);
 
   const cardStyle = useMemo(
@@ -116,11 +101,11 @@ const ContentCard = React.memo<{
             {/* Image Section */}
             <div className="relative h-48 w-full p-2">
               <div className="relative h-full w-full rounded-xl overflow-hidden bg-white/5">
-                <img
+                <Image
                   src={prettySafeImage(content.coverImgMediaKey)}
                   alt={content.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  loading="lazy"
+                  fill
+                  className="object-cover"
                 />
               </div>
             </div>
@@ -207,19 +192,19 @@ const FeaturedContent = ({ featured }: FeaturedContentProps) => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAutoRotating]);
+  }, [isAutoRotating, featured.length]);
 
   const nextContent = useCallback(() => {
     setIsAutoRotating(false);
     setActiveIndex((prev) => (prev + 1) % featured.length);
     setTimeout(() => setIsAutoRotating(true), 8000);
-  }, []);
+  }, [featured.length]);
 
   const prevContent = useCallback(() => {
     setIsAutoRotating(false);
     setActiveIndex((prev) => (prev - 1 + featured.length) % featured.length);
     setTimeout(() => setIsAutoRotating(true), 8000);
-  }, []);
+  }, [featured.length]);
 
   const selectContent = useCallback((index: number) => {
     setIsAutoRotating(false);
